@@ -15,6 +15,6 @@ D0206_YT=redhatczech-6420.6975-9g70-13e5-6vww
 E112_MCAST=226.22.36.127:4458
 E112_YT=redhatczech-6420.q3xu-jpus-a8mg-55jx
 E104_MCAST=226.22.36.128:4460
-E112_YT=redhatczech-6420.zsta-xckx-vyj2-6vkw
+E104_YT=redhatczech-6420.zsta-xckx-vyj2-6vkw
 
 ffmpeg -i udp:// -vcodec libx264 -preset veryfast -maxrate 1000k -bufsize 6000k -pix_fmt yuv420p -g 50 -acodec libmp3lame -b:a 128k -ac 2 -ar 44100 -f flv rtmp://a.rtmp.youtube.com/live2/
