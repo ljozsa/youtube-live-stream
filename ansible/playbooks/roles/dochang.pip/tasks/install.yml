@@ -1,0 +1,28 @@
+---
+- name: set pip cache dir
+  set_fact:
+    pip_cache_dir: '{{ ansible_env.TMPDIR | default("/tmp") }}/ansible-pip-{{ ansible_user_uid }}-{{ ansible_date_time.epoch }}-{{ (2**48) | random }}'
+
+- name: set pip install script path
+  set_fact:
+    pip_install_script_path: '{{ pip_cache_dir }}/get-pip.py'
+
+- name: ensure pip cache dir present
+  file:
+    path: '{{ pip_cache_dir }}'
+    state: directory
+
+- name: download get-pip.py
+  get_url:
+    dest: '{{ pip_install_script_path }}'
+    force: yes
+    url: https://bootstrap.pypa.io/get-pip.py
+    validate_certs: yes
+
+- name: run the script
+  command: 'python {{ pip_install_script_path }}'
+
+- name: delete cache dir
+  file:
+    path: '{{ pip_cache_dir }}'
+    state: absent

@@ -1,0 +1,10 @@
+---
+- name: check whether pip exists
+  shell: command -v pip
+  ignore_errors: yes
+  register: result
+  changed_when: false
+  always_run: yes
+
+- include: install.yml
+  when: result | failed

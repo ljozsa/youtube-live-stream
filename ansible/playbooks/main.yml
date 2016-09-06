@@ -1,0 +1,53 @@
+---
+- hosts: streamer
+  roles:
+    - dochang.pip
+
+  tasks:
+    - name: install rpmfusion-free yum repo
+      dnf:
+        name: http://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-{{ ansible_distribution_version }}.noarch.rpm
+        state: present
+ 
+    - name: install rpmfusion-nonfree yum repo
+      dnf:
+        name: http://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-{{ ansible_distribution_version }}.noarch.rpm
+        state: present
+
+    - name: install necessary packages
+      dnf: name={{ item }} state=present
+      with_items:
+        - ffmpeg
+        - git
+        - tmux
+        - psmisc
+
+    - name: "firewalld: allow igmp"
+      command: firewall-cmd --direct --add-rule ipv4 filter IN_FedoraServer_allow 1 -p igmp -j ACCEPT
+
+    - name: "firewalld: allow udp"
+      command: firewall-cmd --direct --add-rule ipv4 filter IN_FedoraServer_allow 1 -d 224.0.0.0/8 -j ACCEPT 
+
+    - name: firewalld save config permanently
+      command: firewall-cmd --runtime-to-permanent
+
+    - name: fetch streamer scripts from github
+      git:
+        repo: "{{ item }}"
+        dest: "{{ ansible_env.HOME}}/{{ item | regex_replace('^.*/', '') | regex_replace('\\.git$', '') }}"
+        force: yes
+      with_items:
+        - https://github.com/ljozsa/youtube-live-stream.git
+
+    - name: disable suspend on lid close
+      lineinfile:
+        dest: /etc/systemd/logind.conf
+        state: present
+        regexp: "^#HandleLidSwitch=suspend"
+        line: HandleLidSwitch=ignore
+
+    - name: Install necessary python modules via pip
+      command: pip install {{ item }}
+      with_items:
+        - libtmux
+
