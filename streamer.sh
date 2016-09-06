@@ -1,3 +1,3 @@
 #!/bin/bash
-tmux new-session
+tmux new-session -d
 python ./streamer.py
