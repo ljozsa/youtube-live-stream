@@ -1,5 +1,6 @@
 ---
 - hosts: streamer
+  remote_user: root
   roles:
     - dochang.pip
 
