@@ -10,8 +10,9 @@ d105 = ('d105','226.22.36.121:4446','f805-1zek-5pws-cdxw')
 d0207 = ('d0207','226.22.36.125:4454','1h7g-axbq-peqp-7g9p')
 d0206 = ('d0206','226.22.36.123:4450','1xub-purk-m9uk-2rtu')
 e112 = ('e112','226.22.36.127:4458','9up5-w9bc-wchb-cr28')
+g202 = ('g202','226.22.36.132:4468','cdt6-5sjc-2yf4-0tqf')
 
-rooms_to_stream = ( e105, a112, a113, d105, d0207, d0206, e112, e104 )
+rooms_to_stream = ( e105, a112, a113, d105, d0207, d0206, e112, g202 )
 windows = []
 
 server = libtmux.Server()
