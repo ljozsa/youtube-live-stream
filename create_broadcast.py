@@ -97,7 +97,7 @@ def refresh_broadcasts():
   ).execute()
 
   for broadcast in list_broadcasts_response.get("items", []):
-    broadcasts[0].append(broadcast['snippet']['title'])
+    broadcasts[0].append(broadcast['snippet']['title'].encode('utf-8'))
     broadcasts[1].append(broadcast['id'])
 
   while 'nextPageToken' in list_broadcasts_response:
@@ -109,104 +109,105 @@ def refresh_broadcasts():
       pageToken=pt
     ).execute()
     for broadcast in list_broadcasts_response.get("items", []):
-      broadcasts[0].append(broadcast['snippet']['title'])
+      broadcasts[0].append(broadcast['snippet']['title'].encode('utf-8'))
       broadcasts[1].append(broadcast['id'])
 
   return broadcasts
 
-if __name__ == "__main__":
-  youtube = get_authenticated_service()
-  streams = refresh_streams()
-  broadcasts = refresh_broadcasts()
+#if __name__ == "__main__":
+youtube = get_authenticated_service()
+streams = refresh_streams()
+broadcasts = refresh_broadcasts()
 
-  schedule = [] 
-  filename = "final-sorted.csv"
-  with open(filename, 'rb') as csvfile:
-    csv_parsed = csv.reader(csvfile, delimiter=',', quotechar='"')
-    for record in csv_parsed:
-      recording_start_t = json.dumps(datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S"), default = myconverter).strip('"')
-      recording_stop_t = json.dumps(datetime.strptime(record[2], "%m/%d/%Y %H:%M:%S"), default = myconverter).strip('"')
+  #print streams
+  #print broadcasts
 
-      naive = datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S")
-      local_dt = local.localize(naive, is_dst=None)
-      utc_dt = local_dt.astimezone (pytz.utc)
-      title = (record[7].replace(';',',') + ": " + record[5][:126] + '..') if len(record[7].replace(';',',') + ": " +  record[5]) > 126 else record[7].replace(';',',') + ": " +  record[5]
 
-      print title
-      try:
-        broadcast_key_index = broadcasts[0].index(title)
-        broadcast_id = broadcasts[1][broadcast_key_index]
-      except ValueError:
-        insert_broadcast_response = youtube.liveBroadcasts().insert(
-          part="snippet,status",
-          body=dict(
-            snippet=dict(
-              title=title,
-              scheduledStartTime=recording_start_t,
-              scheduledEndTime=recording_stop_t,
-              description=record[6]
-            ),
-            status=dict(
-            privacyStatus="public"
-            )
-          )
-        ).execute()
-        broadcast_id = insert_broadcast_response['id']
-      else:
-        insert_broadcast_response = youtube.liveBroadcasts().update(
-          part="id,snippet,status",
-          body=dict(
-            id=broadcast_id,
-            snippet=dict(
-              title=title,
-              scheduledStartTime=recording_start_t,
-              scheduledEndTime=recording_stop_t,
-              description=record[6]
-            ),
-            status=dict(
-            privacyStatus="public"
-            )
-          )
-        ).execute()
+schedule = [] 
+filename = "final-sorted.csv"
+with open(filename, 'rb') as csvfile:
+  csv_parsed = csv.reader(csvfile, delimiter=',', quotechar='"')
+  for record in csv_parsed:
+    recording_start_t = json.dumps(datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S"), default = myconverter).strip('"')
+    recording_stop_t = json.dumps(datetime.strptime(record[2], "%m/%d/%Y %H:%M:%S"), default = myconverter).strip('"')
+    
+    naive = datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S")
+    local_dt = local.localize(naive, is_dst=None)
+    utc_dt = local_dt.astimezone (pytz.utc)
+    title = (record[7].replace(';',',') + ": " + record[5][:126] + '..') if len(record[7].replace(';',',') + ": " +  record[5]) > 126 else record[7].replace(';',',') + ": " +  record[5]
 
-      print insert_broadcast_response
-
-      response = youtube.videos().update(
-        part = 'snippet',
-        body = dict(
-          id = broadcast_id,
+    print title
+    try:
+      broadcast_key_index = broadcasts[0].index(title)
+      broadcast_id = broadcasts[1][broadcast_key_index]
+    except ValueError:
+      insert_broadcast_response = youtube.liveBroadcasts().insert(
+        part="snippet,status",
+        body=dict(
           snippet=dict(
-            title = title,
-            categoryId=28,
-            description=record[6],
-            tags = record[-1].split(',')
+            title=title,
+            scheduledStartTime=recording_start_t,
+            scheduledEndTime=recording_stop_t,
+            description=record[6]
+          ),
+          status=dict(
+          privacyStatus="public"
+          )
+        )
+      ).execute()
+      broadcast_id = insert_broadcast_response['id']
+    else:
+      insert_broadcast_response = youtube.liveBroadcasts().update(
+        part="id,snippet,status",
+        body=dict(
+          id=broadcast_id,
+          snippet=dict(
+            title=title,
+            scheduledStartTime=recording_start_t,
+            scheduledEndTime=recording_stop_t,
+            description=record[6]
+          ),
+          status=dict(
+          privacyStatus="public"
           )
         )
       ).execute()
 
-      try:
-        stream_key_index = streams[0].index(record[8])
-        stream_id =  streams[1][stream_key_index]
-      except ValueError:
-        insert_stream_response = youtube.liveStreams().insert(
-          part="snippet,cdn",
-          body=dict(
-            snippet=dict(
-              title=record[8]
-            ),
-            cdn=dict(
-              frameRate="variable",
-              resolution="variable",
-              ingestionType="rtmp",
-              )
+    response = youtube.videos().update(
+      part = 'snippet',
+      body = dict(
+        id = broadcast_id,
+        snippet=dict(
+          title = title,
+          categoryId=28,
+          description=record[6],
+          tags = record[-1].split(',')
+        )
+      )
+    ).execute()
+    print response
+
+    try:
+      stream_key_index = streams[0].index(record[8])
+      stream_id =  streams[1][stream_key_index]
+    except ValueError:
+      insert_stream_response = youtube.liveStreams().insert(
+        part="snippet,cdn",
+        body=dict(
+          snippet=dict(
+            title=record[8]
+          ),
+          cdn=dict(
+            frameRate="variable",
+            resolution="variable",
+            ingestionType="rtmp",
             )
-          ).execute()
-        stream_id = insert_stream_response['id']
+          )
+        ).execute()
+      stream_id = insert_stream_response['id']
 
-      bind_broadcast_response = youtube.liveBroadcasts().bind(
-        part="id,contentDetails",
-        id=insert_broadcast_response['id'],
-        streamId=stream_id
-      ).execute()
-
-      broadcasts = refresh_broadcasts()
+    bind_broadcast_response = youtube.liveBroadcasts().bind(
+      part="id,contentDetails",
+      id=insert_broadcast_response['id'],
+      streamId=stream_id
+    ).execute()
