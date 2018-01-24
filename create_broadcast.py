@@ -152,13 +152,16 @@ with open(filename, 'rb') as csvfile:
           ),
           status=dict(
           privacyStatus="public"
+          ),
+          contentDetails=dict(
+            enableMonitorStream=False
           )
         )
       ).execute()
       broadcast_id = insert_broadcast_response['id']
     else:
       insert_broadcast_response = youtube.liveBroadcasts().update(
-        part="id,snippet,status",
+        part="id,snippet,status,contentDetails",
         body=dict(
           id=broadcast_id,
           snippet=dict(
@@ -169,7 +172,18 @@ with open(filename, 'rb') as csvfile:
           ),
           status=dict(
           privacyStatus="public"
-          )
+          ),
+          contentDetails=dict(
+            monitorStream=dict(
+              enableMonitorStream=False,
+              broadcastStreamDelayMs=0
+          ),
+            enableDvr=True,
+            enableContentEncryption=False,
+            enableEmbed=True,
+            recordFromStart=True,
+            startWithSlate=False
+            )
         )
       ).execute()
 
