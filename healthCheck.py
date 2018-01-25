@@ -76,49 +76,51 @@ part="id,snippet,cdn,status",
 mine=True,
 maxResults=50
 ).execute()
+import os
+import time
 
 for item in list_streams_request.get("items", []):
   print item['snippet']['title'] + " stream status " + item['status']['streamStatus'] + " health status "+ item['status']['healthStatus']['status']
 
-print "-----------------------------"
-
-list_streams_request = youtube.liveBroadcasts().list(
-part="id,snippet,contentDetails,status",
-mine=True,
-maxResults=1
-).execute()
-
-broadcasts = []
-list_broadcasts_response = youtube.liveBroadcasts().list(
-    broadcastStatus="upcoming",
-    part="id,snippet,contentDetails",
-    maxResults=50
-  ).execute()
-
-broadcasts = list_broadcasts_response['items']
-
+#print "-----------------------------"
+#
+#list_streams_request = youtube.liveBroadcasts().list(
+#part="id,snippet,contentDetails,status",
+#mine=True,
+#maxResults=1
+#).execute()
+#
+#broadcasts = []
+#list_broadcasts_response = youtube.liveBroadcasts().list(
+#    broadcastStatus="upcoming",
+#    part="id,snippet,contentDetails",
+#    maxResults=50
+#  ).execute()
+#
+#broadcasts = list_broadcasts_response['items']
+#
 #print list_broadcasts_response
-for item in list_broadcasts_response:
-  print '+-+'
-  print item
-  print '-+-'
-
-while 'nextPageToken' in list_broadcasts_response:
-  pt = list_broadcasts_response['nextPageToken']
-  list_broadcasts_response = youtube.liveBroadcasts().list(
-      broadcastStatus="all",
-      part="id,snippet,contentDetails",
-      maxResults=50,
-      pageToken=pt
-    ).execute()
-  broadcasts+=list_broadcasts_response['items']
-
+#for item in list_broadcasts_response:
+#  print '+-+'
+#  print item
+#  print '-+-'
+#
+#while 'nextPageToken' in list_broadcasts_response:
+#  pt = list_broadcasts_response['nextPageToken']
+#  list_broadcasts_response = youtube.liveBroadcasts().list(
+#      broadcastStatus="all",
+#      part="id,snippet,contentDetails",
+#      maxResults=50,
+#      pageToken=pt
+#    ).execute()
+#  broadcasts+=list_broadcasts_response['items']
+#
 #print broadcasts
 #print '++++++++++++++++++++++++++'
-for item in broadcasts:
-  print '+-+'
-  print item['snippet']['scheduledStartTime']
-  print '-+-'
-  
-  #print item['snippet']['scheduledStartTime']
+#for item in broadcasts:
+#  print '+-+'
+#  print item['snippet']['scheduledStartTime']
+#  print '-+-'
+#  
+#  print item['snippet']['scheduledStartTime']
 #print list_streams_request
