@@ -124,7 +124,7 @@ broadcasts = refresh_broadcasts()
 
 
 schedule = [] 
-filename = "final-sorted.csv"
+filename = "27.csv"
 with open(filename, 'rb') as csvfile:
   csv_parsed = csv.reader(csvfile, delimiter=',', quotechar='"')
   for record in csv_parsed:
@@ -134,9 +134,12 @@ with open(filename, 'rb') as csvfile:
     naive = datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S")
     local_dt = local.localize(naive, is_dst=None)
     utc_dt = local_dt.astimezone (pytz.utc)
-    title = (record[7].replace(';',',') + ": " + record[5][:126] + '..') if len(record[7].replace(';',',') + ": " +  record[5]) > 126 else record[7].replace(';',',') + ": " +  record[5]
+    title = (record[6].replace(';',',') + ": " + record[4][:98] + '..') if len(record[6].replace(';',',') + ": " +  record[4]) > 98 else record[6].replace(';',',') + ": " +  record[4]
 
     print title
+    print recording_start_t
+    print recording_stop_t
+    print record[5]
     try:
       broadcast_key_index = broadcasts[0].index(title)
       broadcast_id = broadcasts[1][broadcast_key_index]
@@ -148,15 +151,12 @@ with open(filename, 'rb') as csvfile:
             title=title,
             scheduledStartTime=recording_start_t,
             scheduledEndTime=recording_stop_t,
-            description=record[6]
+            description=record[5]
           ),
           status=dict(
           privacyStatus="public"
-          ),
-          contentDetails=dict(
-            enableMonitorStream=False
           )
-        )
+          )
       ).execute()
       broadcast_id = insert_broadcast_response['id']
     else:
@@ -168,7 +168,7 @@ with open(filename, 'rb') as csvfile:
             title=title,
             scheduledStartTime=recording_start_t,
             scheduledEndTime=recording_stop_t,
-            description=record[6]
+            description=record[5]
           ),
           status=dict(
           privacyStatus="public"
@@ -194,7 +194,7 @@ with open(filename, 'rb') as csvfile:
         snippet=dict(
           title = title,
           categoryId=28,
-          description=record[6],
+          description=record[5],
           tags = record[-1].split(',')
         )
       )
@@ -209,7 +209,7 @@ with open(filename, 'rb') as csvfile:
         part="snippet,cdn",
         body=dict(
           snippet=dict(
-            title=record[8]
+            title = record[7]
           ),
           cdn=dict(
             frameRate="variable",
