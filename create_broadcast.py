@@ -81,17 +81,15 @@ def refresh_streams():
   mine=True,
   maxResults=50
   ).execute()
-
   for item in list_streams_request.get("items", []):
     streams[0].append(item['snippet']['title'])
     streams[1].append(item['id'])
-
   return streams
 
 def refresh_broadcasts():
   broadcasts = [[],[]]
   list_broadcasts_response = youtube.liveBroadcasts().list(
-    broadcastStatus="all",
+    broadcastStatus="upcoming",
     part="id,snippet",
     maxResults=50
   ).execute()
@@ -100,10 +98,11 @@ def refresh_broadcasts():
     broadcasts[0].append(broadcast['snippet']['title'].encode('utf-8'))
     broadcasts[1].append(broadcast['id'])
 
+
   while 'nextPageToken' in list_broadcasts_response:
     pt = list_broadcasts_response['nextPageToken']
     list_broadcasts_response = youtube.liveBroadcasts().list(
-      broadcastStatus="all",
+      broadcastStatus="upcoming",
       part="id,snippet",
       maxResults=50,
       pageToken=pt
@@ -111,7 +110,6 @@ def refresh_broadcasts():
     for broadcast in list_broadcasts_response.get("items", []):
       broadcasts[0].append(broadcast['snippet']['title'].encode('utf-8'))
       broadcasts[1].append(broadcast['id'])
-
   return broadcasts
 
 #if __name__ == "__main__":
@@ -119,12 +117,9 @@ youtube = get_authenticated_service()
 streams = refresh_streams()
 broadcasts = refresh_broadcasts()
 
-  #print streams
-  #print broadcasts
-
 
 schedule = [] 
-filename = "27.csv"
+filename = "28.csv"
 with open(filename, 'rb') as csvfile:
   csv_parsed = csv.reader(csvfile, delimiter=',', quotechar='"')
   for record in csv_parsed:
@@ -134,16 +129,19 @@ with open(filename, 'rb') as csvfile:
     naive = datetime.strptime(record[1], "%m/%d/%Y %H:%M:%S")
     local_dt = local.localize(naive, is_dst=None)
     utc_dt = local_dt.astimezone (pytz.utc)
-    title = (record[6].replace(';',',') + ": " + record[4][:98] + '..') if len(record[6].replace(';',',') + ": " +  record[4]) > 98 else record[6].replace(';',',') + ": " +  record[4]
+    #title = (record[6].replace(';',',') + ": " + record[4][:80] + '..')
+    if len(record[6].replace(';',',') + ": " +  record[4]) > 80:
+      print "title1"
+      title = (record[6].replace(';',',') + ": " + record[4][:80] + '..')
+    else:
+      print "title2"
+      title = record[6].replace(';',',') + ": " +  record[4]
 
-    print title
-    print recording_start_t
-    print recording_stop_t
-    print record[5]
     try:
       broadcast_key_index = broadcasts[0].index(title)
       broadcast_id = broadcasts[1][broadcast_key_index]
     except ValueError:
+      print title
       insert_broadcast_response = youtube.liveBroadcasts().insert(
         part="snippet,status",
         body=dict(
@@ -175,7 +173,7 @@ with open(filename, 'rb') as csvfile:
           ),
           contentDetails=dict(
             monitorStream=dict(
-              enableMonitorStream=False,
+              enableMonitorStream=True,
               broadcastStreamDelayMs=0
           ),
             enableDvr=True,
@@ -202,7 +200,7 @@ with open(filename, 'rb') as csvfile:
     print response
 
     try:
-      stream_key_index = streams[0].index(record[8])
+      stream_key_index = streams[0].index(record[7])
       stream_id =  streams[1][stream_key_index]
     except ValueError:
       insert_stream_response = youtube.liveStreams().insert(
@@ -220,8 +218,10 @@ with open(filename, 'rb') as csvfile:
         ).execute()
       stream_id = insert_stream_response['id']
 
+
     bind_broadcast_response = youtube.liveBroadcasts().bind(
       part="id,contentDetails",
       id=insert_broadcast_response['id'],
       streamId=stream_id
     ).execute()
+    streams = refresh_streams()
